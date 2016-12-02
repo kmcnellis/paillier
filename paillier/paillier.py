@@ -1,6 +1,7 @@
 import math
 import primes
 from random import randint
+import rsa
 
 def invmod(a, p, maxiter=1000000):
     """The multiplicitive inverse of a in the integers modulo p:
@@ -37,13 +38,19 @@ def inModNStar(a,n):
 def getRandomModN(n):
     a = 0
     while not inModN(a):
-        a = randint(1,pub.n-1)
+        a = randint(1,n-1)
     return a
 
 def getRandomModNStar(n):
     a = 0
-    while not inModNStar(a):
-        a = randint(1,pub.n-1)
+    while not inModNStar(a,n):
+        a = randint(1,n-1)
+    return a
+
+def getRandomModNPrime(n):
+    a = 0
+    while not inModNStar(a,n) and inModN(a):
+        a = primes.generate_prime(long(round(math.log(n, 2))))
     return a
 
 def modpow(base, exponent, modulus):
@@ -87,6 +94,16 @@ def generate_keypair(bits):
     q = primes.generate_prime(bits / 2)
     n = p * q
     return PrivateKey(p, q, n), PublicKey(n)
+
+def blind(key, pubkey, plain):
+    x = pow(key, pubkey.e, pubkey.n)
+    cipher = (plain * x) % pubkey.n
+    return cipher
+
+def unblind(key, pubkey, cipher):
+    reverse = invmod(key1,pubkey.n)
+    plain = (cipher * reverse) % pubkey.n
+    return plain
 
 def encrypt(pub, plain):
     while True:
