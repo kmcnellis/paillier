@@ -89,15 +89,17 @@ def generate_keypair(bits):
     n = p * q
     return PrivateKey(p, q, n), PublicKey(n)
 
-def blind(key, pubkey, plain):
+def blind(key, pubkey, plainText):
     x = pow(key, pubkey.e, pubkey.n)
+    plain = rsa.transform.bytes2int(plainText)
     cipher = (plain * x) % pubkey.n
-    return cipher
+    return rsa.transform.int2bytes(cipher)
 
-def unblind(key, pubkey, cipher):
+def unblind(key, pubkey, cipherText):
     reverse = invmod(key1,pubkey.n)
+    cipher = rsa.transform.bytes2int(cipherText)
     plain = (cipher * reverse) % pubkey.n
-    return plain
+    return rsa.transform.int2bytes(plain)
 
 def encrypt(pub, plain):
     while True:
