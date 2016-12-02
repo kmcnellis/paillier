@@ -2,6 +2,7 @@ import math
 import primes
 from random import randint
 import rsa
+from fractions import gcd
 
 def invmod(a, p, maxiter=1000000):
     """The multiplicitive inverse of a in the integers modulo p:
@@ -21,18 +22,11 @@ def invmod(a, p, maxiter=1000000):
         raise ValueError('%d has no inverse mod %d' % (a, p))
     return d
 
-def egcd(a, b):
-    if a == 0:
-        return (b, 0, 1)
-    else:
-        g, y, x = egcd(b % a, a)
-        return (g, x - (b // a) * y, y)
-
 def inModN(a,n):
     return a < n and a > 0
 
 def inModNStar(a,n):
-    g, x, y = egcd(a,n)
+    g = gcd(a,n)
     return g == 1 and inModN(a,n)
 
 def getRandomModN(n):
