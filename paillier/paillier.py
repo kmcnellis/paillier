@@ -20,6 +20,32 @@ def invmod(a, p, maxiter=1000000):
         raise ValueError('%d has no inverse mod %d' % (a, p))
     return d
 
+def egcd(a, b):
+    if a == 0:
+        return (b, 0, 1)
+    else:
+        g, y, x = egcd(b % a, a)
+        return (g, x - (b // a) * y, y)
+
+def inModN(a,n):
+    return a < n and a > 0
+
+def inModNStar(a,n):
+    g, x, y = egcd(a,n)
+    return g == 1 and inModN(a,n)
+
+def getRandomModN(n):
+    a = 0
+    while not inModN(a):
+        a = randint(1,pub.n-1)
+    return a
+
+def getRandomModNStar(n):
+    a = 0
+    while not inModNStar(a):
+        a = randint(1,pub.n-1)
+    return a
+
 def modpow(base, exponent, modulus):
     """Modular exponent:
          c = b ^ e mod m
@@ -80,24 +106,35 @@ def encryptFactors(pub, plain):
     cipher = (pow(pub.g, plain, pub.n_sq) * x) % pub.n_sq
     return cipher, r
 
-def genZKP(pub, plain, cipher, r):
+def genZKPnumbers(pub, plain, cipher, r):
+    x = getRandomModN(pub.n)
+    s = getRandomModNStar(pub.n)
+    u = (pow(pub.g, x, pub.n_sq) * pow(s, pub.n, pub.n_sq)) % pub.n_sq
+
+    return x,s,u
+
+def genZKP(pub, plain, cipher, r,x,s,e):
     proof = {}
     proof["variations"] = []
     proof["n"] = pub.n
     proof["n2"] = pub.n_sq
+    proof["g"] = pub.g
     for i in xrange(1):
         variation = {}
-        x = randint(1,pub.n-1)
-        variation["x"] = x
-        s = randint(1,pub.n-1)
-        variation["s"] = s
+        x = getRandomModN(pub.n)
+        s = getRandomModNStar(pub.n)
+        u = (pow(pub.g, x, pub.n_sq) * pow(s, pub.n, pub.n_sq)) % pub.n_sq
+
         e = randint(1,pub.n-1)
-        variation["e"] = e
         v = (x - e*plain) % pub.n
+        w = (s * pow(invmod(r,pub.n), e, pub.n) * pow(pub.g, v / pub.n, pub.n)) % pub.n
+
+        variation["x"] = x
+        variation["s"] = s
+        variation["u"] = u
+        variation["e"] = e
         variation["v"] = v
-        w = (s * pow(r, -1*e, pub.n) * pow(pub.g, v / pub.n, pub.n)) % pub.n
         variation["w"] = w
-        u = pow(g, x, pub.n_sq) * pow(s, pub.n, pub.n_sq)
         print "x",x
         print "s",s
         print "e",e
