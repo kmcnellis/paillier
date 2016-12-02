@@ -1,5 +1,6 @@
 import math
 import primes
+from random import randint
 
 def invmod(a, p, maxiter=1000000):
     """The multiplicitive inverse of a in the integers modulo p:
@@ -111,7 +112,7 @@ def genZKP(pub, plain, cipher, r):
     ren = pow(r, pub.n, pub.n_sq)
     cipher = (pow(pub.g, plain, pub.n_sq) * ren) % pub.n_sq
     return cipher, r
-    
+
 def e_add(pub, a, b):
     """Add one encrypted integer to another"""
     return a * b % pub.n_sq
