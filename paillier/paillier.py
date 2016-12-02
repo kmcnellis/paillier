@@ -96,10 +96,15 @@ def blind(key, pubkey, plainText):
     return rsa.transform.int2bytes(cipher)
 
 def unblind(key, pubkey, cipherText):
-    reverse = invmod(key1,pubkey.n)
+    reverse = invmod(key,pubkey.n)
     cipher = rsa.transform.bytes2int(cipherText)
     plain = (cipher * reverse) % pubkey.n
     return rsa.transform.int2bytes(plain)
+
+def signBlind(privkey, cipherText):
+    cipher = rsa.transform.bytes2int(cipherText)
+    signed = pow(cipher, privkey.e, privkey.n)
+    return rsa.transform.int2bytes(signed)
 
 def encrypt(pub, plain):
     while True:
