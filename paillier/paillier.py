@@ -70,6 +70,48 @@ def encrypt(pub, plain):
     cipher = (pow(pub.g, plain, pub.n_sq) * x) % pub.n_sq
     return cipher
 
+def encryptFactors(pub, plain):
+    while True:
+        r = primes.generate_prime(long(round(math.log(pub.n, 2))))
+        if r > 0 and r < pub.n:
+            break
+    x = pow(r, pub.n, pub.n_sq)
+    cipher = (pow(pub.g, plain, pub.n_sq) * x) % pub.n_sq
+    return cipher, r
+
+def genZKP(pub, plain, cipher, r):
+    proof = {}
+    proof["variations"] = []
+    proof["n"] = pub.n
+    proof["n2"] = pub.n_sq
+    for i in xrange(1):
+        variation = {}
+        x = randint(1,pub.n-1)
+        variation["x"] = x
+        s = randint(1,pub.n-1)
+        variation["s"] = s
+        e = randint(1,pub.n-1)
+        variation["e"] = e
+        v = (x - e*plain) % pub.n
+        variation["v"] = v
+        w = (s * pow(r, -1*e, pub.n) * pow(pub.g, v / pub.n, pub.n)) % pub.n
+        variation["w"] = w
+        u = pow(g, x, pub.n_sq) * pow(s, pub.n, pub.n_sq)
+        print "x",x
+        print "s",s
+        print "e",e
+        print "v",v
+        print "w",w
+        print "u",u
+        print "proof",(pow(g, v, pub.n_sq)*pow(cipher, e, pub.n_sq)*pow(w, pub.n, pub.n_sq)) % pub.n_sq
+        proof["variations"].append(variation)
+    return proof
+
+
+    ren = pow(r, pub.n, pub.n_sq)
+    cipher = (pow(pub.g, plain, pub.n_sq) * ren) % pub.n_sq
+    return cipher, r
+    
 def e_add(pub, a, b):
     """Add one encrypted integer to another"""
     return a * b % pub.n_sq
@@ -86,4 +128,3 @@ def decrypt(priv, pub, cipher):
     x = pow(cipher, priv.l, pub.n_sq) - 1
     plain = ((x // pub.n) * priv.m) % pub.n
     return plain
-
