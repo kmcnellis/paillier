@@ -1,8 +1,9 @@
 import math
 import primes
 from random import randint
-import rsa
+from Crypto.Util.number import getRandomRange, bytes_to_long, long_to_bytes, size, inverse, GCD
 from fractions import gcd
+import hashlib
 
 def invmod(a, p, maxiter=1000000):
     """The multiplicitive inverse of a in the integers modulo p:
@@ -47,6 +48,12 @@ def getRandomModNPrime(n):
         a = primes.generate_prime(long(round(math.log(n, 2))))
     return a
 
+def hash(a,b):
+    h = hashlib.sha224()
+    hash.update(a)
+    hash.update(b)
+    return bytes_to_long(hash.hexdigest())
+
 def modpow(base, exponent, modulus):
     """Modular exponent:
          c = b ^ e mod m
@@ -89,23 +96,6 @@ def generate_keypair(bits):
     n = p * q
     return PrivateKey(p, q, n), PublicKey(n)
 
-def blind(key, pubkey, plainText):
-    x = pow(key, pubkey.e, pubkey.n)
-    plain = rsa.transform.bytes2int(plainText)
-    cipher = (plain * x) % pubkey.n
-    return rsa.transform.int2bytes(cipher)
-
-def unblind(key, pubkey, cipherText):
-    reverse = invmod(key,pubkey.n)
-    cipher = rsa.transform.bytes2int(cipherText)
-    plain = (cipher * reverse) % pubkey.n
-    return rsa.transform.int2bytes(plain)
-
-def signBlind(privkey, cipherText):
-    cipher = rsa.transform.bytes2int(cipherText)
-    signed = pow(cipher, privkey.e, privkey.n)
-    return rsa.transform.int2bytes(signed)
-
 def encrypt(pub, plain):
     while True:
         r = primes.generate_prime(long(round(math.log(pub.n, 2))))
@@ -134,7 +124,8 @@ def genZKP(pub, plain, cipher, r):
     s = getRandomModNStar(pub.n)
     u = (pow(pub.g, x, pub.n_sq) * pow(s, pub.n, pub.n_sq)) % pub.n_sq
 
-    e = getRandomModN(pub.n)
+    e = hash(a,b) % pub.n
+
     comp = (x - e*plain) % pub.n
     v = comp % pub.n
     w = (s * pow(invmod(r,pub.n), e, pub.n) * pow(pub.g, comp, pub.n) / pow(pub.g, pub.n, pub.n)) % pub.n
@@ -147,11 +138,11 @@ def genZKP(pub, plain, cipher, r):
     proof["w"] = w
 
     result = (pow(pub.g, v, pub.n_sq)*pow(cipher, e, pub.n_sq)*pow(w, pub.n, pub.n_sq)) % pub.n_sq
-    print "cipher: ",cipher
-    print "u     : ",u
-    print "result: ",result
-
-    print "u == result: ",u == result
+    # print "cipher: ",cipher
+    # print "u     : ",u
+    # print "result: ",result
+    #
+    # print "u == result: ",u == result
     return proof
 
 def e_add(pub, a, b):
