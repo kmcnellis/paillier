@@ -31,7 +31,7 @@ def inModNStar(a,n):
 
 def getRandomModN(n):
     a = 0
-    while not inModN(a):
+    while not inModN(a,n):
         a = randint(1,n-1)
     return a
 
@@ -43,7 +43,7 @@ def getRandomModNStar(n):
 
 def getRandomModNPrime(n):
     a = 0
-    while not inModNStar(a,n) and inModN(a):
+    while not inModNStar(a,n) and inModN(a,n):
         a = primes.generate_prime(long(round(math.log(n, 2))))
     return a
 
@@ -124,49 +124,47 @@ def encryptFactors(pub, plain):
     cipher = (pow(pub.g, plain, pub.n_sq) * x) % pub.n_sq
     return cipher, r
 
-def genZKPnumbers(pub, plain, cipher, r):
+def genZKP(pub, plain, cipher, r):
+    proof = {}
+    proof["n"] = pub.n
+    proof["n2"] = pub.n_sq
+    proof["g"] = pub.g
+    proof["c"] = cipher
+
     x = getRandomModN(pub.n)
     s = getRandomModNStar(pub.n)
     u = (pow(pub.g, x, pub.n_sq) * pow(s, pub.n, pub.n_sq)) % pub.n_sq
 
-    return x,s,u
+    variation = {}
+    x = getRandomModN(pub.n)
+    s = getRandomModNStar(pub.n)
+    u = (pow(pub.g, x, pub.n_sq) * pow(s, pub.n, pub.n_sq)) % pub.n_sq
 
-def genZKP(pub, plain, cipher, r,x,s,e):
-    proof = {}
-    proof["variations"] = []
-    proof["n"] = pub.n
-    proof["n2"] = pub.n_sq
-    proof["g"] = pub.g
-    for i in xrange(1):
-        variation = {}
-        x = getRandomModN(pub.n)
-        s = getRandomModNStar(pub.n)
-        u = (pow(pub.g, x, pub.n_sq) * pow(s, pub.n, pub.n_sq)) % pub.n_sq
+    e = randint(1,pub.n-1)
+    comp = (x - e*plain) % pub.n
+    v = comp % pub.n
+    w = (s * pow(invmod(r,pub.n), e, pub.n) * pow(pub.g, comp, pub.n) / pow(pub.g, pub.n, pub.n)) % pub.n
 
-        e = randint(1,pub.n-1)
-        v = (x - e*plain) % pub.n
-        w = (s * pow(invmod(r,pub.n), e, pub.n) * pow(pub.g, v / pub.n, pub.n)) % pub.n
+    variation["x"] = x
+    variation["s"] = s
+    variation["u"] = u
+    variation["e"] = e
+    variation["v"] = v
+    variation["w"] = w
 
-        variation["x"] = x
-        variation["s"] = s
-        variation["u"] = u
-        variation["e"] = e
-        variation["v"] = v
-        variation["w"] = w
-        print "x",x
-        print "s",s
-        print "e",e
-        print "v",v
-        print "w",w
-        print "u",u
-        print "proof",(pow(g, v, pub.n_sq)*pow(cipher, e, pub.n_sq)*pow(w, pub.n, pub.n_sq)) % pub.n_sq
-        proof["variations"].append(variation)
+    print "x",x
+    print "s",s
+    print "e",e
+    print
+    print "u",u
+    print
+    print "v",v
+    print "w",w
+    print
+    print "u",u
+    print "proof",(pow(pub.g, v, pub.n_sq)*pow(cipher, e, pub.n_sq)*pow(w, pub.n, pub.n_sq)) % pub.n_sq
+
     return proof
-
-
-    ren = pow(r, pub.n, pub.n_sq)
-    cipher = (pow(pub.g, plain, pub.n_sq) * ren) % pub.n_sq
-    return cipher, r
 
 def e_add(pub, a, b):
     """Add one encrypted integer to another"""
