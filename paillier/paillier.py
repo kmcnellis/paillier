@@ -158,27 +158,39 @@ def genZKPset(pub, plain, cipher, r):
 
     p = getRandomModNStar(pub.n)
     ej = getRandomModN(pub.n)
-    vj = getRandomModNStar(pub.n)
+    vj = getRandomModNStar(pub.n_sq)
 
     ui = pow(p,pub.n,pub.n_sq)
-    uj = (pow(vj,pub.n,pub.n_sq) * pow((pow(pub.g,mj,pub.n_sq) / cipher),ej,pub.n_sq)) % pub.n_sq
 
-    e = hash(ej,vj) % pub.n
+    nume = pow(pub.g,mj*ej,pub.n_sq)
+    denom = pow(cipher,ej,pub.n_sq)
+    uj = (vj * nume * invmod(denom,pub.n_sq)) % pub.n_sq
+    #
+    # print "mi",plain
+    # print "mj",mj
+    # print "ui",ui
+    # print "uj",uj
+
+
+    if (plain == 0):
+        e = hash(ui,uj) % pub.n
+    else:
+        e = hash(uj,ui) % pub.n
 
     ei = (e - ej) % pub.n
-    vi = (p * pow(r,ei,pub.n) * (pow(g,ei,pub.n) / pow(g,pub.n,pub.n))) % pub.n
-    proof["e"] = e
 
+    vi = (pow(p,pub.n,pub.n_sq) * pow(r,ei*pub.n,pub.n_sq)) % pub.n_sq
+    proof["e"] = e
     i = {
         "u": ui,
-        "v": vi
-        "e": ei
+        "v": vi,
+        "e": ei,
         "m": plain
     }
     j = {
         "u": uj,
-        "v": vj
-        "e": ej
+        "v": vj,
+        "e": ej,
         "m": mj
     }
 
@@ -188,16 +200,35 @@ def genZKPset(pub, plain, cipher, r):
     else:
         proof["S"].append(j)
         proof["S"].append(i)
-
-    print mj
-    print pow(vj,pub.n,pub.n)
-    print (uj * pow((c/pow(pub.g,mj,pub.n_sq)), ej , pub.n_sq)) % pub.n_sq
-
-    print plain
-    print pow(vi,pub.n,pub.n)
-    print (ui * pow((c/pow(pub.g,mi,pub.n_sq)), ei , pub.n_sq)) % pub.n_sq
-
-
+    # print
+    # print "mj",mj
+    # print "uj",uj
+    # print "vj",vj
+    # print "ej",ej
+    # # print "b",(uj * pow((cipher/pow(pub.g,mj,pub.n_sq)), ej , pub.n_sq)) % pub.n_sq
+    # nume = pow(cipher,ej,pub.n_sq)
+    # denom = pow(pub.g,mj*ej,pub.n_sq)
+    # print "nume",nume
+    # print "denom",denom
+    # print "a",vj
+    # print "b", (uj * nume * invmod(denom,pub.n_sq)) % pub.n_sq
+    # print vj == (uj * nume * invmod(denom,pub.n_sq)) % pub.n_sq
+    # print
+    # print "mi",plain
+    # print "ui",ui
+    # print "vi",vi
+    # print "ei",ei
+    #
+    # # nume = pow((pow(pub.g,plain,pub.n_sq)*pow(r,pub.n,pub.n_sq)),ei,pub.n_sq)
+    # nume = pow(cipher,ei,pub.n_sq)
+    # denom = pow(pub.g,plain*ei,pub.n_sq)
+    # print "nume",nume
+    # print "denom",denom
+    #
+    # print "a",vi
+    # print "b",(ui * nume * invmod(denom,pub.n_sq)) % pub.n_sq
+    # print vi == (ui * nume * invmod(denom,pub.n_sq)) % pub.n_sq
+    # print
     return proof
 
 def e_add(pub, a, b):
