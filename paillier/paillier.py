@@ -129,41 +129,29 @@ def genZKP(pub, plain, cipher, r):
     proof["n"] = pub.n
     proof["n2"] = pub.n_sq
     proof["g"] = pub.g
-    proof["c"] = cipher
 
     x = getRandomModN(pub.n)
     s = getRandomModNStar(pub.n)
     u = (pow(pub.g, x, pub.n_sq) * pow(s, pub.n, pub.n_sq)) % pub.n_sq
 
-    variation = {}
-    x = getRandomModN(pub.n)
-    s = getRandomModNStar(pub.n)
-    u = (pow(pub.g, x, pub.n_sq) * pow(s, pub.n, pub.n_sq)) % pub.n_sq
-
-    e = randint(1,pub.n-1)
+    e = getRandomModN(pub.n)
     comp = (x - e*plain) % pub.n
     v = comp % pub.n
     w = (s * pow(invmod(r,pub.n), e, pub.n) * pow(pub.g, comp, pub.n) / pow(pub.g, pub.n, pub.n)) % pub.n
 
-    variation["x"] = x
-    variation["s"] = s
-    variation["u"] = u
-    variation["e"] = e
-    variation["v"] = v
-    variation["w"] = w
+    proof["x"] = x
+    proof["s"] = s
+    proof["u"] = u
+    proof["e"] = e
+    proof["v"] = v
+    proof["w"] = w
 
-    print "x",x
-    print "s",s
-    print "e",e
-    print
-    print "u",u
-    print
-    print "v",v
-    print "w",w
-    print
-    print "u",u
-    print "proof",(pow(pub.g, v, pub.n_sq)*pow(cipher, e, pub.n_sq)*pow(w, pub.n, pub.n_sq)) % pub.n_sq
+    result = (pow(pub.g, v, pub.n_sq)*pow(cipher, e, pub.n_sq)*pow(w, pub.n, pub.n_sq)) % pub.n_sq
+    print "cipher: ",cipher
+    print "u     : ",u
+    print "result: ",result
 
+    print "u == result: ",u == result
     return proof
 
 def e_add(pub, a, b):
