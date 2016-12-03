@@ -50,9 +50,9 @@ def getRandomModNPrime(n):
 
 def hash(a,b):
     h = hashlib.sha224()
-    hash.update(a)
-    hash.update(b)
-    return bytes_to_long(hash.hexdigest())
+    h.update(str(a))
+    h.update(str(b))
+    return bytes_to_long(h.hexdigest())
 
 def modpow(base, exponent, modulus):
     """Modular exponent:
@@ -124,7 +124,7 @@ def genZKP(pub, plain, cipher, r):
     s = getRandomModNStar(pub.n)
     u = (pow(pub.g, x, pub.n_sq) * pow(s, pub.n, pub.n_sq)) % pub.n_sq
 
-    e = hash(a,b) % pub.n
+    e = hash(x,s) % pub.n
 
     comp = (x - e*plain) % pub.n
     v = comp % pub.n
