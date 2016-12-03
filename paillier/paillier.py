@@ -119,7 +119,7 @@ def genZKP(pub, plain, cipher, r):
     proof["n"] = pub.n
     proof["n2"] = pub.n_sq
     proof["g"] = pub.g
-
+    versions = {}
     x = getRandomModN(pub.n)
     s = getRandomModNStar(pub.n)
     u = (pow(pub.g, x, pub.n_sq) * pow(s, pub.n, pub.n_sq)) % pub.n_sq
@@ -143,6 +143,61 @@ def genZKP(pub, plain, cipher, r):
     # print "result: ",result
     #
     # print "u == result: ",u == result
+    return proof
+
+def genZKPset(pub, plain, cipher, r):
+    proof = {}
+    proof["n"] = pub.n
+    proof["n2"] = pub.n_sq
+    proof["g"] = pub.g
+    proof["S"] = []
+    if (plain == 0):
+        mj = 1
+    else:
+        mj = 0
+
+    p = getRandomModNStar(pub.n)
+    ej = getRandomModN(pub.n)
+    vj = getRandomModNStar(pub.n)
+
+    ui = pow(p,pub.n,pub.n_sq)
+    uj = (pow(vj,pub.n,pub.n_sq) * pow((pow(pub.g,mj,pub.n_sq) / cipher),ej,pub.n_sq)) % pub.n_sq
+
+    e = hash(ej,vj) % pub.n
+
+    ei = (e - ej) % pub.n
+    vi = (p * pow(r,ei,pub.n) * (pow(g,ei,pub.n) / pow(g,pub.n,pub.n))) % pub.n
+    proof["e"] = e
+
+    i = {
+        "u": ui,
+        "v": vi
+        "e": ei
+        "m": plain
+    }
+    j = {
+        "u": uj,
+        "v": vj
+        "e": ej
+        "m": mj
+    }
+
+    if (plain == 0):
+        proof["S"].append(i)
+        proof["S"].append(j)
+    else:
+        proof["S"].append(j)
+        proof["S"].append(i)
+
+    print mj
+    print pow(vj,pub.n,pub.n)
+    print (uj * pow((c/pow(pub.g,mj,pub.n_sq)), ej , pub.n_sq)) % pub.n_sq
+
+    print plain
+    print pow(vi,pub.n,pub.n)
+    print (ui * pow((c/pow(pub.g,mi,pub.n_sq)), ei , pub.n_sq)) % pub.n_sq
+
+
     return proof
 
 def e_add(pub, a, b):
